@@ -157,7 +157,7 @@ VEST.Register( "ntfsniper", { model = "models/fart/ragdolls/css/counter_sas_noma
 
 VEST.Register( "ci", { model = "models/player/ci_unit.mdl", damage = { [DMG_BULLET] = 0.45, [DMG_FALL] = 1.6 }, mobility = 0.83, weight = 4 } )
 VEST.Register( "cicom", { model = "models/player/ci_com.mdl", damage = { [DMG_BULLET] = 0.4, [DMG_FALL] = 1.6 }, mobility = 0.9, weight = 4 } )
-VEST.Register( "ciheavy", { model = "Models/mw2guy/riot/juggernaut.mdl", damage = { [DMG_BULLET] = 0.3, [DMG_FALL] = 1.9, [DMG_BLAST] = 0.2 }, mobility = 0.65, weight = 5 } )
+VEST.Register( "ciheavy", { model = "Models/mw2guy/riot/juggernaut.mdl", damage = { [DMG_BULLET] = 0.2, [DMG_FALL] = 1.9, [DMG_BLAST] = 0.2 }, mobility = 0.7, weight = 4 } )
 
 VEST.Register( "goc", { model = "models/goc/goc_sld.mdl", damage = { [DMG_BULLET] = 0.4, [DMG_FALL] = 1.6 }, mobility = 0.8, weight = 3 } )
 VEST.Register( "goc_com", { model = "models/goc/goc_com.mdl", damage = { [DMG_BULLET] = 0.35, [DMG_FALL] = 1.7 }, mobility = 0.82, weight = 3 } )

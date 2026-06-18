@@ -320,11 +320,15 @@ function GM:EntityTakeDamage( target, info )
 			
 			if !target.isRDM and SCPTeams.IsAlly(attacker:SCPTeam(), target:SCPTeam()) then
 				attacker.isRDM = true
-				timer.Simple(30, function ()
-					if IsValid(attacker) then
-						attacker.isRDM = false
-					end
-				end)
+				if not timer.Exists(target:SteamID64().."TimerRDM") then
+					timer.Create(target:SteamID64().."TimerRDM", 30, 1, function ()
+						if IsValid(attacker) then
+							attacker.isRDM = false
+						end
+					end)
+				else
+					timer.Start(target:SteamID64().."TimerRDM")
+				end
 			end
 
 			-- process the effects of the damage on karma

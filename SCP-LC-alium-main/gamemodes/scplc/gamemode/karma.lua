@@ -129,7 +129,7 @@ function KARMA.Hurt(attacker, victim, dmginfo)
    -- Ignore excess damage
    local hurt_amount = math.min(victim:Health(), dmginfo:GetDamage())
 
-   if !victim.IsRDM and SCPTeams.IsAlly(attacker:SCPTeam(), victim:SCPTeam()) then
+   if ROUND.active and !victim.IsRDM and SCPTeams.IsAlly(attacker:SCPTeam(), victim:SCPTeam()) then
       -- if WasAvoidable(attacker, victim, dmginfo) then return end
 
       local penalty = KARMA.GetHurtPenalty(victim:GetLiveKarma(), hurt_amount)
@@ -158,7 +158,7 @@ function KARMA.Killed(attacker, victim, dmginfo)
    if attacker == victim then return end
    if not attacker:IsPlayer() or not victim:IsPlayer() then return end
 
-   if SCPTeams.IsAlly(attacker:SCPTeam(), victim:SCPTeam()) then
+   if ROUND.active and SCPTeams.IsAlly(attacker:SCPTeam(), victim:SCPTeam()) then
       -- don't penalise attacker for stupid victims
       -- if WasAvoidable(attacker, victim, dmginfo) then return end
 

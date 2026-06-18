@@ -255,10 +255,10 @@ hook.Add( "RegisterSCP", "RegisterBaseSCPs", function()
 		allow_chat = true,
 		no_damage_forces = true,
 	}, {
-		base_health = 8500,
-		max_health = 8500,
-		base_speed = 200,
-		run_speed = 200,
+		base_health = 6500,
+		max_health = 6500,
+		base_speed = 190,
+		run_speed = 190,
 	} )
 
 	RegisterSCP( "SCP966", "models/player/mishka/966_new.mdl", "weapon_scp_966", {

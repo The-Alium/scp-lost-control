@@ -344,6 +344,10 @@ function GM:SLCPostround( winner )
 	KARMA.RoundEnd()
 
 	for k, v in pairs(GetActivePlayers()) do
+		if timer.Exists(v:SteamID64().."TimerRDM") then
+			timer.Stop(v:SteamID64().."TimerRDM")
+		end
+		v.isRDM = false
 		v:ChatPrint("Your karma is: "..tostring(v:GetLiveKarma()))
 	end
 

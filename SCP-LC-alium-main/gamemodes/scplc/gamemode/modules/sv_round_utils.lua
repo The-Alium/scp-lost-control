@@ -320,7 +320,7 @@ function SetupPlayers( multi )
 						end
 					until #tab == 0
 				end
-				if ply_lowkarma then class = {name = d_class, team = TEAM_CLASSD, weapons = {}, ammo = {}, chip = "", omnitool = false, health = 115, walk_speed = 100, run_speed = 225, sanity = 75, vest = nil, max = 0, tier = 0,} spawns = spawninfo_d spawninfo = spawninfo_d end
+				if ply_lowkarma then class = {name = d_class, model = CLASSD_MODELS, team = TEAM_CLASSD, weapons = {}, ammo = {}, chip = "", omnitool = false, health = 115, walk_speed = 100, run_speed = 225, sanity = 75, vest = nil, max = 0, tier = 0,} spawns = spawninfo_d spawninfo = spawninfo_d end
 				if !class then
 					print( "Failed to assign '"..ply:Nick().."' to any class in group '"..g_name.."'." )
 					table.insert( plys, ply )
