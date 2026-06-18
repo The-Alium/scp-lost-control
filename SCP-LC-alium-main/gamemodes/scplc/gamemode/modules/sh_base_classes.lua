@@ -541,7 +541,7 @@ hook.Add( "SLCRegisterPlayerClasses", "BaseClasses", function()
 		ammo = { swb_m249 = 1000, swb_xm1014 = 100 },
 		chip = "hacked3",
 		omnitool = true,
-		health = 250,
+		health = 200,
 		walk_speed = 105,
 		run_speed = 250,
 		sanity = 125,
