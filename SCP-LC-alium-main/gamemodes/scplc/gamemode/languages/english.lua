@@ -820,6 +820,10 @@ sbgocagent = [[ - Eliminate everyone in the facility ]],
 	
 }
 
+lang.CLASS_OBJECTIVES["SCP016-2"] = [[- Escape from the facility
+		- You have 4 minutes of live,
+		Kill people to prolong life
+		- Cooperate with other SCPs]]
 lang.CLASS_DESCRIPTION = {
 	classd = [[Difficulty: Easy
 Toughness: Normal
@@ -1544,6 +1548,9 @@ lang.GenericUpgrades = {
 local wep = {}
 lang.WEAPONS = wep
 
+wep.SCP016 = {
+	death_info = "Killed from hemorrhagic shock caused by \nSCP 016"
+}
 wep.SCP023 = {
 	editMode1 = "Press LMB to place spectre",
 	editMode2 = "RMB - cancel, R - Rotate",
