@@ -320,7 +320,40 @@ function SetupPlayers( multi )
 						end
 					until #tab == 0
 				end
-				if ply_lowkarma then class = {name = d_class, model = CLASSD_MODELS, team = TEAM_CLASSD, weapons = {}, ammo = {}, chip = "", omnitool = false, health = 115, walk_speed = 100, run_speed = 225, sanity = 75, vest = nil, max = 0, tier = 0,} spawns = spawninfo_d spawninfo = spawninfo_d end
+				if ply_lowkarma then
+					-- class = {name = d_class, model = CLASSD_MODELS, team = TEAM_CLASSD, weapons = {}, ammo = {}, chip = "", omnitool = false, health = 115, walk_speed = 100, run_speed = 225, sanity = 75, vest = nil, max = 0, tier = 0,} spawns = spawninfo_d spawninfo = spawninfo_d
+					local spawn
+
+					for group_name, group in pairs( GetGroups() ) do
+						if group_name != "SUPPORT" then
+							local _, grspwn = GetClassGroup( group_name )
+							for k, c in pairs( group ) do
+								if k == d_class then
+									class = c
+									spawn = grspwn
+									break
+								end
+							end
+						else
+							for sup_group_name, sup_group in pairs( group ) do
+								local _, grspwn = GetSupportGroup( sup_group_name )
+								for k, c in pairs( sup_group ) do
+									if k == class_n then
+										class = c
+										spawn = grspwn
+										break
+									end
+								end
+							end
+						end
+
+						if class then
+							break
+						end
+					end
+
+					if !class or !spawn then return end
+				end
 				if !class then
 					print( "Failed to assign '"..ply:Nick().."' to any class in group '"..g_name.."'." )
 					table.insert( plys, ply )
@@ -905,3 +938,113 @@ function OpenSCPs()
 		end
 	end
 end
+
+local function Door_gas(doors_name, type)
+	local doors_ent = {}
+	for _, door in ents.Iterator() do
+		if door:GetClass() == "func_door" and table.KeyFromValue(doors_name, door:GetName()) ~= nil then
+			table.insert(doors_ent, door)
+		end
+	end
+	if type then
+		for _, door in ipairs(doors_ent) do
+			door:Fire("Open")
+		end
+	else
+		for _, door in ipairs(doors_ent) do
+			door:Fire("Close")
+			door:Fire("Lock")
+		end
+	end
+end
+
+function SLC_GasActivate(zone)
+	print("ILActivate")
+	local IL_ZONE = {}
+	local IL_ZONE_DOOR = {}
+	IL_ZONE[0] = {{Vector(-1527.967407, 256.054108, -127.968750), Vector(831.968750, 2047.977295, 383.981476)},
+	{Vector(-1527.967407, 256.054108, -127.968750), Vector(-2239.910889, 2175.968750, 255.905502)},
+	{Vector(-2175.968750, 512.189270, 128.253616), Vector(-650.447327, -61.635063, 351.968750)},
+	{Vector(-1527.968750, 1151.910400, 128.134781), Vector(-649.704041, 2046.223145, 255.968750)},
+	{Vector(-591.823303, 2047.766724, 0.031250), Vector(-8.031250, 776.048889, 255.938431)},
+	{Vector(1335.925049, 1847.880859, 128.211990), Vector(-359.968750, 1536.127319, 383.629456)},
+	{Vector(392.437408, 1152.712891, 136.031250), Vector(831.968750, 2047.864868, 383.810089)},
+	{Vector(3191.968750, -1783.927612, 0.082590), Vector(-2559.551758, 1855.784912, 255.968750)},
+	{Vector(2423.902588, -1800.031250, 0.290974), Vector(752.031250, -2423.907715, 127.899590)},
+	{Vector(2559.830322, -2175.882568, -748.072998), Vector(512.106995, 255.968750, -656.030090)}
+}
+	IL_ZONE[1] = {{Vector(0, 0, 0), Vector(1, 1, 1)},
+	{Vector(5535.654297, -2575.765137, 16.031250), Vector(3208.031250, 3727.661133, 127.794067)},
+	{Vector(5312.143555, 1279.942505, -511.968750), Vector(6335.968750, -447.864716, 159.827072)},
+	{Vector(5128.085449, -1143.779053, 0.031246), Vector(5695.968750, -520.530029, 127.606644)},
+	{Vector(2933.962891, 4981.964355, -447.968750), Vector(1928.048584, 1480.142456, 127.968750)},
+	{Vector(3703.968750, 1680.183105, 0.067034), Vector(2568.031250, 3743.327148, 127.347771)}
+	}
+	IL_ZONE[2] = {{Vector(0, 0, 0), Vector(1, 1, 1)},
+	{Vector(11593.121094, -5466.031738, -2787.676270), Vector(-7409.392578, 10075.899414, 1542.773682)}}
+	IL_ZONE_DOOR[0] = {"checkpoint_lcz_1_2", "checkpoint_lcz_1_1", "checkpoint_lcz_2_1", "checkpoint_lcz_2_2",
+	"checkpoint_lcz_2_3", "checkpoint_lcz_2_4", "checkpoint_lcz_1_3", "checkpoint_lcz_1_4"}
+	IL_ZONE_DOOR[1] = {"checkpoint_lcz_1_7", "checkpoint_lcz_1_8", "checkpoint_lcz_2_7", "checkpoint_lcz_2_8",
+	"checkpoint_lcz_2_6", "checkpoint_lcz_2_5", "checkpoint_lcz_1_6", "checkpoint_lcz_1_5"}
+	IL_ZONE_DOOR[2] = {"gate_b_door_r1", "gate_b_door_l1", "gate_containment_door_r", "gate_containment_door_l"}
+	Door_gas(IL_ZONE_DOOR[zone], true)
+	AddTimer("SLC_GAS_OPEN", 15, 1, function ()
+		for _, zone_bound in ipairs(IL_ZONE[0]) do
+			local zone_entity = ents.FindInBox(zone_bound[1], zone_bound[2])
+			for _, ply in ipairs(zone_entity) do
+				if ply:IsPlayer() then ply:ApplyEffect("Oxidation") end
+			end
+		end
+		Door_gas(IL_ZONE_DOOR[zone], false)
+	end)
+end
+
+function SLC_GasAttention(zone, type)
+	net.Start("SLC_SoundGas")
+	net.WriteUInt(zone, 2)
+	net.WriteUInt(type, 2)
+	net.Broadcast()
+end
+
+local time_check = {}
+time_check["att_bef"] = {}
+time_check["att"] = {}
+hook.Add("SLCRoundCleanup", "timer_n_check_remove", function ()
+	DestroyTimer("SLC_GAS_OPEN")
+	time_check["att_bef"][0] = nil
+	time_check["att_bef"][1] = nil
+	time_check["att_bef"][2] = nil
+	time_check["att"][0] = nil
+	time_check["att"][1] = nil
+	time_check["att"][2] = nil
+end)
+hook.Add("Tick", "SLC_GasTimer", function ()
+	if GetTimer("SLCRound") == nil then return end
+	local time_round_slc = GetTimer("SLCRound"):GetRemainingTime()
+	local cvar_time_round = CVAR.slc_time_round:GetInt()
+	if !time_check["att_bef"][0] and time_round_slc < cvar_time_round - (ROUND_SLC_GAS.LCZ*60)+180 then
+		SLC_GasAttention(0, 2)
+		time_check["att_bef"][0] = true
+	elseif !time_check["att_bef"][1] and time_round_slc < cvar_time_round - (ROUND_SLC_GAS.HCZ*60)+180 then
+		SLC_GasAttention(1, 2)
+		time_check["att_bef"][1] = true
+	elseif !time_check["att_bef"][2] and time_round_slc < cvar_time_round - (ROUND_SLC_GAS.EZ*60)+180 then
+		SLC_GasAttention(2, 2)
+		time_check["att_bef"][2] = true
+	end
+
+	if !time_check["att"][0] and time_round_slc < cvar_time_round - ROUND_SLC_GAS.LCZ*60 then
+		SLC_GasAttention(0, 1)
+		SLC_GasActivate(0)
+		time_check["att"][0] = true
+	elseif !time_check["att"][1] and time_round_slc < cvar_time_round - ROUND_SLC_GAS.HCZ*60 then
+		SLC_GasActivate(1)
+		SLC_GasAttention(1, 1)
+		time_check["att"][1] = true
+	elseif !time_check["att"][2] and time_round_slc < cvar_time_round - ROUND_SLC_GAS.EZ*60 then
+		SLC_GasAttention(2, 1)
+		SLC_GasActivate(2)
+		time_check["att"][2] = true
+
+	end
+end)

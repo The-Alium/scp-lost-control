@@ -304,7 +304,7 @@ function GM:EntityTakeDamage( target, info )
 		--SCP buff
 	end
 
-	
+
 	if target:IsPlayer() then
 		local attacker = info:GetAttacker()
 		local dmg = info:GetDamage()
@@ -314,10 +314,10 @@ function GM:EntityTakeDamage( target, info )
 		if IsValid( attacker ) and attacker:IsPlayer() then
 			attacker.Logger:DamageDealt( dmg_orig, target, { dmg_type = dmg_type, dmg_final = dmg, hp = hp } )
 		end
-		
-		
-		if target != attacker and IsValid(attacker) and attacker:IsPlayer() and ROUND.active and math.floor(info:GetDamage()) > 0 then
-			
+
+
+		if target != attacker and IsValid(attacker) and attacker:IsPlayer() and !ROUND.post and !ROUND.preparing and math.floor(info:GetDamage()) > 0 then
+
 			if !target.isRDM and SCPTeams.IsAlly(attacker:SCPTeam(), target:SCPTeam()) then
 				attacker.isRDM = true
 				if not timer.Exists(target:SteamID64().."TimerRDM") then

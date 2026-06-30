@@ -10,6 +10,10 @@ ROUND = {
 	active = false,
 }
 
+SLC_RADAR_POS = {
+	[0] = {},
+	[1] = {}
+}
 --[[-------------------------------------------------------------------------
 Language system
 ---------------------------------------------------------------------------]]
@@ -253,7 +257,7 @@ hook.Add( "RenderScreenspaceEffects", "SCPEffects", function()
 	if ply:Alive() then
 		local hp = ply:Health()
 		local t = ply:SCPTeam()
-		
+
 		if ply:Alive() and t != TEAM_SPEC and t != TEAM_SCP and hp < 25 then
 			local scale = 1 - hp / 25, 0.2
 			clr.colour = clr.colour * ( 1 - scale )
@@ -284,7 +288,7 @@ hook.Add( "RenderScreenspaceEffects", "SCPEffects", function()
 
 	render.UpdateScreenEffectTexture()
 	color_mat:SetTexture( "$fbtexture", render.GetScreenEffectTexture() )
-	
+
 	color_mat:SetFloat( "$pp_colour_mulr", clr.mul_r )
 	color_mat:SetFloat( "$pp_colour_mulg", clr.mul_g )
 	color_mat:SetFloat( "$pp_colour_mulb", clr.mul_b )
@@ -296,7 +300,7 @@ hook.Add( "RenderScreenspaceEffects", "SCPEffects", function()
 	color_mat:SetFloat( "$pp_colour_brightness", clr.brightness )
 	color_mat:SetFloat( "$pp_colour_contrast", clr.contrast )
 	color_mat:SetFloat( "$pp_colour_colour", clr.colour )
-	
+
 	render.SetMaterial( color_mat )
 	render.DrawScreenQuad()
 end )
@@ -324,7 +328,7 @@ net.Receive( "PlayerBlink", function( len )
 	endblink = CurTime() + duration
 	nextblink = CurTime() + delay
 
-	HUDNextBlink = nextblink 
+	HUDNextBlink = nextblink
 	HUDBlink = delay - duration
 
 	hook.Run( "SLCBlink", duration, delay )
@@ -437,7 +441,7 @@ function GM:CalcView( ply, origin, angles, fov, znear, zfar )
 	local weapon = ply:GetActiveWeapon()
 	if IsValid( weapon )then
 		if weapon.CalcView then
-			local draw_viewer 
+			local draw_viewer
 			view.origin, view.angles, view.fov, draw_viewer = weapon:CalcView( ply, origin * 1, angles * 1, fov )
 
 			if draw_viewer then
@@ -450,7 +454,7 @@ function GM:CalcView( ply, origin, angles, fov, znear, zfar )
 end
 
 function  GM:SetupWorldFog()
-	
+
 end
 
 function GM:PreRender()
@@ -519,7 +523,7 @@ timer.Simple( 0, function()
 
 		if NetTablesReceived then
 			hook.Remove( "Tick", "SLCPlayerReady" )
-			
+
 			print( "Everything is set up! Updating our status on server...", RealTime() - timeout + 10 )
 			_SLCPlayerReady = true
 			//MakePlayerReady()
@@ -556,4 +560,98 @@ concommand.Add( "slc_debuginfo_cl", function( ply, cmd, args )
 	PrintTable( v.scp_var_table, 1 )
 	print( "Misc ->" )
 	print( "==================" )
+end )
+local SLC_radar_materials = {
+	[0] = Material( "sprites/scp_radar.png"),
+	[1] = Material( "sprites/splodesprite" )
+}
+local IsSupport_RADAR_table = {
+	"ntf_3", "ntfmedic", "ntfcom", "ntfsniper",
+	"ci", "cicom", "cishotgun",
+	"gocsoldier", "goccom", "gocscout", "gocmed"
+}
+local function IsSupport_RADAR(ply)
+	local class = ply:SCPClass()
+	if table.KeyFromValue(IsSupport_RADAR_table, class) then return true end
+end
+
+local vec_1_intercom = Vector(-2587.839600, 3630.380127, 251.777161)
+local vec_2_intercom = Vector(-2399.261719, 3855.095947, 473.028564)
+local function ply_inbox(ply)
+	if !ply:Alive() or ply:SCPTeam() == TEAM_SPECTATOR then return false end
+	local ply_pos = ply:GetPos()
+	for i = 1, 3, 1 do
+		if not(vec_1_intercom[i] < ply_pos[i] and vec_2_intercom[i] > ply_pos[i]) then
+			return false
+		end
+	end
+	return true
+end
+
+local function scp_STRING_CLASS(int_class)
+	return int_class <= 99 and "0"..int_class or int_class
+end
+hook.Add("HUDPaint", "SLC_RADAR", function ()
+	local ply_local = LocalPlayer()
+	local radar_type = -1
+	if ply_inbox(ply_local) then
+		surface.SetFont("Default")
+		surface.SetTextColor(color_white)
+		surface.SetTextPos( ScrW()/2, ScrH()/2-200 )
+		surface.DrawText( "You are INTERCOM, every one hear you \n and everyone see what you print in chat" )
+	end
+	if IsSupport_RADAR(ply_local) then
+		radar_type = 0
+		-- print(radar_type)
+	-- elseif ply_local:SCPTeam() == TEAM_SCP then
+	-- 	radar_type = 1
+		-- print(radar_type)
+	else
+		-- print(radar_type)
+		return
+	end
+	if #SLC_RADAR_POS[radar_type] == 0 then return end
+	for _, pos in ipairs(SLC_RADAR_POS[radar_type]) do
+		local ply_dist = ply_local:GetPos():Distance( pos[1] )
+		local ply_distance_size = 64 + ((ply_dist/1000)*2.5)
+		local pos_screen = pos[1]:ToScreen()
+		surface.SetDrawColor(color_white)
+		surface.SetMaterial(SLC_radar_materials[radar_type])
+		surface.DrawTexturedRect(pos_screen.x-ply_distance_size*0.5, pos_screen.y-ply_distance_size*0.5, ply_distance_size, ply_distance_size)
+		-- surface.SetFont( "Default" )
+		surface.SetFont("TargetID")
+		surface.SetTextColor(122, 12, 12)
+		surface.SetTextPos( pos_screen.x-20, pos_screen.y-65 )
+		surface.DrawText( "SCP "..scp_STRING_CLASS(pos[2]) )
+		surface.SetFont("TargetID")
+		surface.SetTextColor(122, 12, 12)
+		surface.SetTextPos( pos_screen.x-20, pos_screen.y-85 )
+		surface.DrawText( "Distance: "..math.Round(ply_dist) )
+		-- render.SetMaterial(SLC_radar_materials[radar_type])
+		-- render.DrawSprite(pos, ply_distance_size, ply_distance_size, color_white)
+	end
+	-- cam.Start3D() -- Start the 3D function so we can draw onto the screen.
+	-- 	for _, pos in ipairs(SLC_RADAR_POS[radar_type]) do
+	-- 		local ply_distance_size = 16 + ((ply_local:GetPos():Distance( pos )/500)*12)
+	-- 		render.SetMaterial(SLC_radar_materials[radar_type])
+	-- 		render.DrawSprite(pos, ply_distance_size, ply_distance_size, color_white)
+	-- 	end
+	-- cam.End3D()
+end)
+
+local tab_gas = {
+	[ "$pp_colour_addr" ] = 0.1,
+	[ "$pp_colour_addg" ] = 0.1,
+	[ "$pp_colour_addb" ] = 0,
+	[ "$pp_colour_brightness" ] = 0,
+	[ "$pp_colour_contrast" ] = 1,
+	[ "$pp_colour_colour" ] = 3,
+	[ "$pp_colour_mulr" ] = 0,
+	[ "$pp_colour_mulg" ] = 0.02,
+	[ "$pp_colour_mulb" ] = 0
+}
+
+hook.Add( "RenderScreenspaceEffects", "color_modify_example", function()
+	local ply_loc = LocalPlayer()
+	if ply_loc:HasEffect("Oxidation") then DrawColorModify( tab_gas ) end
 end )

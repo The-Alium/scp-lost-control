@@ -25,6 +25,8 @@ util.AddNetworkString( "SLCProgressBar" )
 util.AddNetworkString( "SLCLooting" )
 util.AddNetworkString( "SLCHooks" )
 util.AddNetworkString( "SLCXPSummary" )
+util.AddNetworkString( "SLC_SoundGas" )
+util.AddNetworkString("SLC_RADAR")
 
 net.AddTableChannel( "SLCPlayerMeta" )
 net.AddTableChannel( "SLCGameruleData" )
@@ -115,7 +117,7 @@ net.Receive( "WeaponDnD", function( len, ply )
 	if ctrl and ctrl[1] < CurTime() then
 		return
 	end
-	
+
 	local wep1 = net.ReadEntity()
 	local wep2 = net.ReadEntity()
 

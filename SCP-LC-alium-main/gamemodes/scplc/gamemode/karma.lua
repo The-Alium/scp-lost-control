@@ -10,10 +10,9 @@ KARMA = {}
 
 -- ply steamid64 -> karma table for disconnected players who might reconnect
 KARMA.RememberedPlayers = {}
-
 -- Convars, more convenient access than GetConVar bla bla
 KARMA.cv = {}
-KARMA.cv.enabled     = CreateConVar("slc_karma", "1", FCVAR_ARCHIVE + FCVAR_REPLICATED)
+KARMA.cv.enabled     = CreateConVar("slc_karma", "0", FCVAR_ARCHIVE + FCVAR_REPLICATED)
 KARMA.cv.strict      = CreateConVar("slc_karma_strict", "1")
 KARMA.cv.starting    = CreateConVar("slc_karma_starting", "1000")
 KARMA.cv.max         = CreateConVar("slc_karma_max", "1000", FCVAR_REPLICATED)
@@ -29,13 +28,20 @@ KARMA.cv.persist = CreateConVar("slc_karma_persist", "0")
 KARMA.cv.falloff = CreateConVar("slc_karma_clean_half", "0.25")
 
 KARMA.cv.autokick  = CreateConVar("slc_karma_low_autokick", "0")
-KARMA.cv.kicklevel = CreateConVar("slc_karma_low_amount", "800")
-KARMA.cv.kicklevel_scp = CreateConVar("slc_karma_low_amount_scp", "900")
-KARMA.cv.kicklevel_true = CreateConVar("slc_karma_low_amount_true", "600")
+KARMA.cv.kicklevel = CreateConVar("slc_karma_low_amount", "-1", FCVAR_ARCHIVE)
+KARMA.cv.kicklevel_scp = CreateConVar("slc_karma_low_amount_scp", "-1", FCVAR_ARCHIVE)
+KARMA.cv.kicklevel_true = CreateConVar("slc_karma_low_amount_true", "-1", FCVAR_ARCHIVE)
 KARMA.cv.autoban   = CreateConVar("slc_karma_low_ban", "1")
 KARMA.cv.bantime   = CreateConVar("slc_karma_low_ban_minutes", "60")
 
+
 local config = KARMA.cv
+
+concommand.Add("slc_karma_reset", function (ply, cmd, args, argStr)
+   KARMA.cv.enabled:SetBool(tonumber(args[1])>0)
+   KARMA.cv.kicklevel_scp:SetInt((tonumber(args[1])>0) and 800 or -1)
+   KARMA.cv.kicklevel_true:SetInt((tonumber(args[1])>0) and 600 or -1)
+end)
 
 local function IsDebug() return config.debug:GetBool() end
 
@@ -163,7 +169,7 @@ function KARMA.Killed(attacker, victim, dmginfo)
       -- if WasAvoidable(attacker, victim, dmginfo) then return end
 
       local penalty = KARMA.GetKillPenalty(victim:GetLiveKarma())
-      
+
       if victim.IsRDM then
          penalty = penalty/2
       end

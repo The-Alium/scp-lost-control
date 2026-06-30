@@ -554,6 +554,39 @@ EFFECTS.RegisterEffect( "radiation", {
 	wait = 1,
 } )
 
+EFFECTS.RegisterEffect( "Oxidation", {
+	duration = 300,
+	stacks = 0,
+	tiers = {
+		{ icon = Material( "slc/hud/effects/poison5.png" ) }
+	},
+	cantarget = function( ply )
+		local team = ply:SCPTeam()
+
+		if team == TEAM_SPEC then
+			return false
+		end
+
+		return true
+	end,
+	begin = function( self, ply, tier, args, refresh )
+	end,
+	finish = function( self, ply, tier, args, interrupt )
+		
+	end,
+	think = function( self, ply, tier, args )
+		if SERVER then
+			local Ionizing_damage = DamageInfo()
+			Ionizing_damage:SetDamage(ply:GetMaxHealth()/4)
+			Ionizing_damage:SetDamageType(DMG_NERVEGAS)
+			ply:TakeDamageInfo(Ionizing_damage)
+		end
+
+		return 2
+	end,
+	wait = 1,
+} )
+
 if CLIENT then
 	sound.Add( {
 		name = "SLCEffects.Radiation",

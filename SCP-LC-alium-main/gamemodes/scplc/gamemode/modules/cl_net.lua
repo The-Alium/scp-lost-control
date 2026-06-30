@@ -186,7 +186,7 @@ net.Receive( "SLCXPSummary", function( len )
 		if !general_index then
 			general_index = table.insert( tab, { 0, "general" } )
 		end
-		
+
 		tab[general_index][1] = tab[general_index][1] + v
 	end
 
@@ -338,3 +338,33 @@ net.Receive( "UpdateSCPVars", function()
 		end
 	end
 end )
+
+local sound_str = {}
+sound_str[0] = {"sound_slc_gas/attention_gas_lcz.wav", "sound_slc_gas/attention_gas_before_lcz.wav"}
+sound_str[1] = {"sound_slc_gas/attention_gas_hcz.wav", "sound_slc_gas/attention_gas_before_hcz.wav"}
+sound_str[2] = {"sound_slc_gas/attention_gas_ez.wav", "sound_slc_gas/attention_gas_before_ez.wav"}
+local table_str = {}
+table_str[0] = {"Attention all personnel: Light containment zone will be gas sterilization now, all light containment and heavy containment zone checkpoint open for 10 seconds, sterilization starts right after checkpoint close.", "Attention all personnel: Light containment zone sterilization will commence in three minutes."}
+table_str[1] = {"Attention all personnel: Heavy containment zone will be gas sterilization now, all heavy containment and entrance zone checkpoint open for 10 seconds, sterilization starts right after checkpoint close.", "Attention all personnel: Heavy containment zone sterilization will commence in three minutes."}
+table_str[2] = {"Attention all personnel: Entrance containment zone will be gas sterilization now, all gates open for 10 seconds, sterilization starts right after gates close.", "Attention all personnel: Entrance containment zone sterilization will commence in three minutes."}
+net.Receive("SLC_SoundGas", function (len, ply)
+	local zone_get = net.ReadUInt(2)
+	local type_get = net.ReadUInt(2)
+	LocalPlayer():EmitSound(sound_str[zone_get][type_get])
+	LocalPlayer():ChatPrint(table_str[zone_get][type_get])
+end)
+net.Receive("SLC_RADAR", function (len, ply)
+	local x_vec = net.ReadInt(16)
+	local y_vec = net.ReadInt(16)
+	local z_vec = net.ReadInt(16)
+	local type = net.ReadInt(1)
+	local max_table = net.ReadInt(8)
+	local scp_type = net.ReadInt(14)
+	if SLC_RADAR_POS[type] == nil then return end
+	if #SLC_RADAR_POS[type] < max_table then
+		table.insert(SLC_RADAR_POS[type], {Vector(x_vec,y_vec,z_vec), scp_type ~= nil and scp_type or false})
+	else
+		SLC_RADAR_POS[type] = {}
+		table.insert(SLC_RADAR_POS[type],{ Vector(x_vec,y_vec,z_vec), scp_type ~= nil and scp_type or false})
+	end
+end)

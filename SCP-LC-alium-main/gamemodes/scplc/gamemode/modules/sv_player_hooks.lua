@@ -22,6 +22,20 @@ function GM:PlayerInitialSpawn( ply )
 		ply:ResetDailyBonus()
 	end )
 end
+-- local function SLC_SUP_RADAR()
+
+-- end
+
+
+local IsSupport_RADAR_table = {
+	"ntf_3", "ntfmedic", "ntfcom", "ntfsniper",
+	"ci", "cicom", "cishotgun",
+	"gocsoldier", "goccom", "gocscout", "gocmed"
+}
+local function IsSupport_RADAR(ply)
+	local class = ply:SCPClass()
+	if table.KeyFromValue(IsSupport_RADAR_table, class) then return true end
+end
 
 function GM:PlayerSpawn( ply )
 	if !ply.initialSpawn then
@@ -51,6 +65,29 @@ function GM:PlayerSpawn( ply )
 
 	ply:SetupHands()
 	//ply:Cleanup()
+	timer.Simple(0.5, function ()
+		if IsSupport_RADAR(ply) then
+			ply:AddTimer("SLC_TIMER_RADAR_SUP", 15, 10, function (self_timer)
+				local get_scps = SCPTeams.GetPlayersByTeam(TEAM_SCP)
+				for k, v in ipairs(get_scps) do
+					local vec_scp = v:GetPos()
+					net.Start("SLC_RADAR")
+					net.WriteInt(math.Round(vec_scp.x), 16)
+					net.WriteInt(math.Round(vec_scp.y), 16)
+					net.WriteInt(math.Round(vec_scp.z), 16)
+					net.WriteInt(0, 1)
+					net.WriteInt(#get_scps, 8)
+					net.WriteInt(tostring(string.sub(v:SCPClass(),4)), 14)
+					net.Send(ply)
+				end
+				print(self_timer.current)
+				if !ROUND.preparing and !ROUND.post and IsSupport_RADAR(ply) then
+				self_timer.current = self_timer.current > 1 and self_timer.current - 10 or self_timer.current
+				else print("RADAR DESTRUY") self_timer:Destroy() end
+			end)
+		-- elseif ply:SCPTeam() == TEAM_SCP then
+		end
+	end)
 end
 
 function GM:PlayerReady( ply )
@@ -138,7 +175,7 @@ function GM:DoPlayerDeath( ply, attacker, dmginfo )
 	end
 
 	ply:AddDeaths( 1 )
-	if ROUND.active then
+	if !ROUND.post and !ROUND.preparing then
 		KARMA.Killed(attacker, ply, dmginfo)
 	end
 end
@@ -586,7 +623,24 @@ hook.Add( "EntityKeyValue", "SLCButtons", function( ent, key, value )
 	end
 end )
 
+local vec_1_intercom = Vector(-2587.839600, 3630.380127, 251.777161)
+local vec_2_intercom = Vector(-2399.261719, 3855.095947, 473.028564)
+local function ply_inbox(ply)
+	if !ply:Alive() or ply:SCPTeam() == TEAM_SPECTATOR then return false end
+	local ply_pos = ply:GetPos()
+	for i = 1, 3, 1 do
+		if not(vec_1_intercom[i] < ply_pos[i] and vec_2_intercom[i] > ply_pos[i]) then
+			return false
+		end
+	end
+	return true
+end
+
+
 function GM:PlayerSay( ply, text, team )
+	if ply_inbox(ply) then
+		return "[INTERCOM] "..text
+	end
 	return text
 end
 
@@ -595,7 +649,10 @@ function GM:PlayerCanSeePlayersChat( text, team, listener, speaker )
 	return hook.Run( "PlayerCanHearPlayersVoice", listener, speaker ) --SLC uses the same rules for voice and chat
 end
 
+
 function GM:PlayerCanHearPlayersVoice( listener, talker )
+	if ROUND.post then return true end
+	if ply_inbox(talker) then return true end
 	if ROUND.infoscreen then return false end
 	if !listener:IsActive() then return false end
 
@@ -648,3 +705,10 @@ hook.Add( "SetupPlayerVisibility", "CCTVPVS", function( ply, viewentity )
 		end
 	end
 end )
+
+hook.Add("EntityTakeDamage", "SLC_FrendlyFire", function (target, dmg)
+	local dmg_inflictor = dmg:GetInflictor()
+	if target:IsPlayer() and dmg_inflictor ~= nil and dmg_inflictor:IsPlayer() and SCPTeams.IsAlly(target:SCPTeam(), dmg_inflictor:SCPTeam()) then
+		return true
+	end
+end)
